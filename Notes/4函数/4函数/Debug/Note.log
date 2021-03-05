@@ -1,0 +1,5 @@
+﻿D:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(467,5): warning MSB8028: 中间目录(Debug\)包含从另一个项目(Note.vcxproj)共享的文件。   这会导致错误的清除和重新生成行为。
+  4函数.cpp
+  4函数定义.cpp
+  正在生成代码...
+  Note.vcxproj -> E:\C++\Re：从零开始重学C++的生活\Note\Debug\4函数.exe
