@@ -161,13 +161,67 @@ srand()函数定义 ：`srand ((unsigned)int seed);`一般用时间做种子`sra
 
 **==值传递==**：函数中值传递，形参的改变不会引起实参改变。因为内存中是给形参分配空间之后将实参的值赋值给形参，并不会影响实参本身。
 
-<font color=red>**函数分文件编写**</font>
+### 4.1 <font color=red>函数分文件编写</font>
 
 1. 创建后缀名为.h的头文件
 2. 创建后缀名为.cpp的源文件，源文件中用`#include"头文件"`
 3. 在有文件中写函数的声明
 4. 在源文件中写函数的定义
 5. 在代码中引用`#include"头文件"`
+
+### 4.2 函数默认参数
+
+给形参设置默认参数之后，如果函数运行时传入数据，那就使用传入的数据，要不然就使用默认参数。
+
+**注意**：
+
+1. 不设置默认参数的位置只能位于左侧，即某一位置设默认参数之后，它右边的所有形参都必须设置默认参数。
+
+2. 函数声明和函数体分开时，函数声明和函数实现中只有一个能设默认值，否则会出现二义性问题。
+
+   ```c++
+   int add(int a, int b );
+   int add(int a = 5, int b = 2)
+   {
+   	return a + b;
+   }
+   ```
+
+### 4.3 函数占位参数
+
+`返回值类型 函数名(数据类型)`
+
+占位参数也可以设默认值。
+
+`int add(int a, int);`第二个int就是一个占位参数。
+
+### 4.4 重载
+
+采用相同的函数名，提高函数的复用性。但是必须满足一下条件：
+
+- 同一个作用域下
+- 函数参数类型不同或者个数不同或者顺序不同
+
+**引用作为重载条件时**：
+
+```c++
+void func(int& a)
+{
+	cout << "void func(int& a)" << endl;
+}
+void func(const int& a)
+{
+	cout << "void func(const int& a)" << endl;
+}
+
+	int a = 5;
+	func(a);	//"void func(int& a)" 
+	func(5);	//"const void func(int& a)" 
+```
+
+const修饰的实参是为了限制为只读状态，`func(a);`正常情况下传入一个变量会执行`void func(int& a)`；但是`func(5);`传入一个数字`int& a = 5`不合法，就只能走`const void func(int& a)`，原因见8.2。
+
+**形参有默认参数时**：可能会出现二义性，注意区分。函数重载时尽量不用默认参数。
 
 ## 5 指针
 
@@ -309,9 +363,9 @@ cout<<"a="<<a<<"\tb="<<b<<"\tc="<<c<<endl;
 
  **==值传递==**：函数中值传递，形参的改变不会引起实参改变。因为内存中是给形参分配空间之后将实参的值赋值给形参，并不会影响实参本身。
 
-**==地址传递==**：内存中给指针分配空间之后，指针指向对应的实参，函数运行时对，对形参指针指向的实参进行修改。
+**==地址传递==**：内存中给指针分配空间之后，指针指向对应的实参地址，函数运行时对，对形参指针指向的实参进行修改。
 
-**==引用传递==**：可以理解为形参相当于是给实参起了个别名， 用的都是同一块地址，函数运行时直接对该地址的数据进行修改。然而实际上是系统给你搞了个指针常量。
+**==引用传递==**：可以理解为形参相当于是给实参起了个别名，**形参不开辟新空间**， 用的都是同一块地址，函数运行时直接对该地址的数据进行修改。然而实际上是系统给你搞了个指针常量。
 
 ### 8.2 做函数返回值
 
@@ -321,9 +375,606 @@ cout<<"a="<<a<<"\tb="<<b<<"\tc="<<c<<endl;
 
 `int &q = 10; `会报错，但是`const int &q = 10; `就不报错，因为加上const之后编译器会将代码修改为`int temp =10; const int &q = temp;`
 
-引用只能引用合法的内存空间，即在栈或者堆中的数据。直接=10，10数据常量，在常量区，所以不能直接引用。
+引用只能引用合法的内存空间，即在栈或者堆中的数据。直接=10，10是常量，在常量区，所以不能直接引用。
 
 **用来修饰形参，防止误操作。**
 
+## 9 类和对象
+
+C++面向对象的三大特征：封装、继承、多态
+
+###　9.1 封装
+
+将属性（变量）和行为（函数）作为一个整体，表现生活中的事物并对其加以权限控制。
+
+在设计类的时候，属性和行为写在一起，表现为事物。**属性和行为统称为成员**。属性-成员属性、成员变量；行为-成员函数、成员方法。
+
+**访问权限**：
+
+- public：成员在类内**可以**访问，类外**可以**访问
+- private：成员在类内**可以**访问，类外**不可以**访问，子类**不可以**继承
+- protect：成员在类内**可以**访问，类外**不可以**访问，子类**可以**继承
+
+```c++
+#define pi 3.14
+class circle {
+private:
+	int r2;
+public:
+	//属性
+	int r1;	//半径 
+	//行为 
+	double circumference()	//周长 
+	{		return 2*pi*r1;	}
+	double dimensions()
+	{		return pow(pi,r2);	}
+	void set(int n)
+	{		r2 = n;	} 
+}; 
+int main()
+{
+	circle c1;	//实例化一个对象 
+	c1.r1 = 5;
+	//c1.r2=7; 私有成员不可以直接访问 
+	c1.set(2);
+	cout<<"c1的周长："<<c1.circumference()<<endl;
+	cout<<"c1的面积："<<c1.dimensions()<<endl; 
+	return 0;
+} 
+```
 
 
+
+**struct和class的区别**：struct默认权限为公有，class默认权限为私有
+
+将成员属性设置为私有我们可以自己控制读写权限。由于外部不能直接访问，所以我们在类内设置不同的成员函数来限制类外对于属性的读写。
+
+对于读写权限我们可以检测数据的有效性。在成员函数中设置检测语句。
+
+```c++
+#include<iostream>
+using namespace std;
+class Person
+{
+public:
+	void SetMessage(string s1,int n,string s2)
+	{
+		name = s1;
+		address = s2;
+		if(age<0||age>110)
+			return;
+		age = n;
+	}
+	void print()
+	{
+		cout<<"姓名："<<name;
+		if(age>0 && age<110)
+			cout<<" 年龄："<<age; 
+		cout<<"\n";
+	}
+private:
+	string name;
+	int age ; 
+	string address; //设置只可写不可读 
+};
+int main()
+{
+	Person p1,p2;
+	p1.SetMessage("张三",120,"");
+	p2.SetMessage("李四",23,"");
+	p1.print();
+	p2.print();
+	return 0;
+}
+```
+
+### 9.2 对象的初始化和清理
+
+9.2.1 构造函数和析构函数
+
+对象的初始化和清理是两个非常重要的安全问题。C++利用了构造函数和析构函数解决上述问题，这两个函数会被编译器自动调用。因此如果**我们不提供构造函数和析构函数，编译器会提供，但是是空实现**。
+
+**构造函数**：`类名(){}`
+
+- 没返回值，也不写void
+- 函数名与类名相同
+- 可以有参数，可以重载
+- 调用对象时会自动调用构造函数，只调用一次
+
+**析构函数**：`~类名(){}`
+
+- 没返回值，也不写void
+- 函数名与类名相同
+- 没有参数
+- 对象销毁前会自动调用，只会调用一次
+
+#### 9.2.1.1 构造函数的分类及调用
+
+**两种分类方式**：
+
+- 按参数分为：有参构造和无参构造（默认构造）
+
+- 按类型分为：普通构造和拷贝构造
+
+  ```c++
+  Person(const Person &p) 
+  //拷贝构造函数参数列表都这样写
+  ```
+
+  
+
+**三种调用方式**：
+
+- 括号法：调用默认构造函数时候不能加()
+- 显示法
+- 隐式转换法
+
+```c++
+#include<iostream>
+using namespace std;
+class Person
+{
+public:
+	Person()
+	{
+		cout<<"调用无参构造函数"<<endl; 
+	}
+	Person(int a)
+	{
+		cout<<"调用有参构造函数"<<endl; 
+	}
+	Person(const Person &p)
+	{
+		cout<<"调用拷贝构造函数"<<endl; 
+		age = p.age;
+	}
+	~Person()
+	{
+		cout<<"调用析构函数"<<endl; 
+	}
+private:
+	string name;
+	int age ; 
+	string address; //设置只可写不可读 
+};
+int main()
+{
+	//括号法 
+	Person p1;
+	Person p2(1);
+	Person p3(p1);
+	//	Person p() 会被认为是声明函数 
+	
+	// 显示法
+	Person p4;
+	Person p5 = Person(10);
+	Person p6 = Person(p4);
+	//单独的Person(10)是匿名对象，不能用拷贝函数初始化匿名对象
+	//编译器会默认Person(p4) === Person p4
+	
+	//隐式转换法 --- 编译器会给转换成显示法 
+	Person p7 = 10;
+	Person p8 = p7;
+	 
+	system("pause");
+	return 0;
+}
+```
+
+#### 9.2.1.2 拷贝构造函数调用时机
+
+1. 使用一个 已经创建完毕的对象来初始化一个新对象 
+2. 为函数参数传值 
+3. 作为返回值
+
+```c++
+#include<iostream>
+using namespace std;
+class Person
+{
+public:
+	Person()
+	{
+		cout<<"调用无参构造函数"<<endl; 
+	}
+	Person(int a)
+	{
+		cout<<"调用有参构造函数"<<endl; 
+		age = a;
+	}
+	Person(const Person &p)
+	{
+		cout<<"调用拷贝构造函数"<<endl; 
+		age = p.age;
+	}
+	~Person()
+	{
+		cout<<age<<endl; 
+		cout<<"调用析构函数"<<endl; 
+	}
+	int age ; 
+};
+//2.为函数参数传值 
+void func1(Person p)
+{	p.age++;
+	cout<<"这是函数1"<<endl; 
+}
+//3.作为返回值 
+Person func2()
+{
+	Person p;
+	cout<<"这是函数2"<<endl; 
+	return p;
+}
+int main()
+{
+	//1.使用一个 已经创建完毕的对象来初始化一个新对象 
+	Person p1(17);
+	Person p2(p1);
+	
+	func1(p1);
+	func2();
+	
+	return 0;
+} 
+```
+
+#### 9.2.1.3 构造函数调用规则
+
+默认情况下C++编译器会至少提供：默认构造函数，默认析构函数，拷贝函数。**但是**，
+
+- 如果用户定义有参构造函数，C++就不会提供默认无参构造函数了，但是依旧提供拷贝构造函数。
+- 如果用户定义拷贝构造函数，C++就不提供其他构造
+
+#### 9.2.2 深拷贝浅拷贝
+
+浅拷贝：赋值拷贝
+
+深拷贝：在堆区重新声明空间进行拷贝操作，就是自己new一个
+
+```c++
+#include<iostream>
+using namespace std;
+class test
+{
+public:
+	int a;
+	int* p;
+	test(int n,int m)
+	{
+		a = n;
+		p = new int(m);
+		cout<<"调用有参构造函数"<<endl; 
+	} 
+	//如果在VS里这么写会报错（但是dev没报错。
+	//浅拷贝，声明两个对象，析构函数也释放两次p，造成同一区域重复释放 
+	/*test(const test &s)
+	{
+		a = s.a;
+		p = s.p;
+		cout<<"调用拷贝构造函数"<<endl;
+	} */
+	test(const test &s)
+	{
+		a = s.a;
+		p = new int(*s.p); //对s.p指针解引用 
+		cout<<"调用拷贝构造函数"<<endl;
+	}
+	~test()
+	{
+		delete p;
+		cout<<"调用析构函数"<<endl;
+	} 
+};
+void func(){test t1(1,2);test t2(t1);} 
+int main()
+{
+	func();
+	return 0;
+} 
+```
+
+#### 9.2.3 初始化列表
+
+**语法**：`构造函数():属性(值),...{}`
+
+```c++
+test(int n1,int n2,int n3):a(n1),b(n2),c(n3){}
+```
+
+#### 9.2.4 类对象作为类成员
+
+C++类中的成员可以是另一个类的对象，成为**对象成员**。
+
+**作为成员对象的类先构造，后析构**。
+
+```c++
+#include<iostream>
+#include<string>
+using namespace std;
+class message
+{
+public:
+	string PhoneNumber;
+	string EMail;
+	message(string s1,string s2):PhoneNumber(s1),EMail(s2)
+	{
+		cout<<"messagee的构造函数"<<endl; 
+	}
+	~message()
+	{
+		cout<<"messagee的析构函数"<<endl; 
+	}
+};
+class person
+{
+public:
+	string name;
+	message mes;
+	person(string s1,string s2,string s3):name(s1),mes(s2,s3)
+	{
+		cout<<"person的构造函数"<<endl; 
+	}
+	void print()
+	{
+		cout<<"姓名："<<name<<endl;
+		cout<<"个人信息："<<endl;
+		cout<<" -电话："<<mes.PhoneNumber<<"\n -邮件:"<<mes.EMail<<endl; 
+	}
+	~person()
+	{
+		cout<<"person的析构函数"<<endl; 
+	}
+};
+int main()
+{
+	person p("张三","111111111","asdada@ada.com");
+	p.print(); 
+	return 0;
+}
+```
+
+#### 9.2.5 静态成员
+
+静态成员就是在前面加上static。静态成员分为：
+
+- 静态成员变量：
+  - 所有对象共享同一份数据，有两种访问方式，可使用`类名::变量`使用`对象.变量`
+  - 在编译阶段分配内存
+  - 类内声明类外初始化
+- 静态成员函数：
+  - 所有成员共享一个函数，有两种访问方式
+  - 静态成员函数只能访问静态成员变量
+
+### 9.3 对象模型和this指针
+
+#### 9.3.1 成员对象和成员函数分开存储
+
+在C++中，类内的成员变量和成员函数分开存储，只有非静态的成员变量才属于类的对象上
+
+输出：1 4 4
+
+```c++
+#include<iostream>
+using namespace std;
+class test1
+{
+	 
+};
+class test2
+{
+	int a;
+};
+class test3
+{
+	int a;
+	static int b;
+	void func(){};
+	static void f(){}
+};
+int main()
+{
+	//C++给每个空对象分配一个字节的空间，为了区分空对象占内存的位置
+	//每个空对象也有一个独一无二的内存地址 
+	test1 t1;
+	cout<<"sizeof(t1)="<<sizeof(t1)<<endl;
+	
+	//如果不是空的，就按照内部数据分配空间 
+	test2 t2;
+	cout<<"sizeof(t2)="<<sizeof(t2)<<endl;
+	
+	//只有非静态的成员变量才属于类的对象上
+	test3 t3;
+	cout<<"sizeof(t3)="<<sizeof(t3)<<endl;
+	return 0;
+}
+```
+
+#### 9.3.2 this指针
+
+多个同类型的对象会公用类中非静态成员函数的同一块代码，为区分是哪个对象调用的，**this指针可以解决对象冲突**。**this指针指向被调用的成员函数指向的对象**。每个非静态成员函数都有this指针。**也可以用this返回对象本身**。
+
+this指针本质是指针常量，指向是不可以修改的
+
+```c++
+#include<iostream>
+using namespace std;
+class test
+{
+public:
+	int a;
+	test(int a)
+	{
+		this->a = a;
+	}
+	void print()
+	{
+		cout<<"a="<<a<<endl;
+	}
+	test& add(test &p)	
+	/*类型后一定要加引用，否则会调用拷贝构造函数（9.1.2.1）
+	形成新对象，之后的操作都是在新对象上执行的*/
+	{
+		this->a += p.a;
+		return *this;
+		//用this返回对象本身
+	}
+	~test(){} 
+};
+int main()
+{
+	test t(1);
+	t.print();
+	/*如果没加引用，t.add(t)返回形成一个新对象t'，
+	之后是对t'进行.add(t).add(t).add(t)，然后返回t''...
+	以此类推，之后的操作都是在拷贝之后的新对象上，
+	因此t只会进行一次相加操作*/ 
+	t.add(t).add(t).add(t).add(t);
+	t.print();
+	return 0;
+}
+```
+
+#### 9.3.3 空指针访问成员函数
+
+空指针也可以调用成员函数，但是要注意有没有用到this指针。也就是说空指针可以访问类中没有非静态成员变量的成员函数。
+
+```c++
+#include<iostream>
+using namespace std;
+class test
+{
+public:
+	int a;
+	void print()
+	{
+		cout<<"a="<<a<<endl;
+	}
+	~test(){} 
+};
+int main()
+{
+	test *y = NULL;
+	y->print();	//这种无法访问，因为a默认是this.a
+	return 0;
+}
+```
+
+#### 9.3.4 const修饰成员函数
+
+**常函数**：成员函数后加const
+
+- 常函数不可修改成员属性
+- 成员属性声明时加关键字mutable后在常函数中可以修改
+
+**常对象**：声明对象前加const
+
+- 常对象只能调用常函数
+
+```c++
+#include<iostream>
+using namespace std;
+class test
+{
+public:
+	int a;
+	mutable int b;
+	test(){} 
+	void func() const 
+	//test* const this 变为 const test* const this 
+	{
+		// a = 1;  此时a已经不可修改了 
+		/*相当于this->a = 1; 
+		this是指针常量test* const this 
+		指向不可以修改，但是值可以改
+		在成员函数后加const，令其值也不可更改*/ 
+		
+		b = 2;	//加mutable可以修改 
+	}
+	void f(){} 
+	~test(){} 
+};
+int main()
+{
+	const test t;	//常对象 
+	//t.a = 2; 报错，常对象只能修改加mutable的变量 
+	t.b = 6;
+	//t.f(); 报错，常对象只能调用常函数，因为普通成员函数可能会修改属性 
+	t.func();
+	return 0;
+}
+```
+
+
+
+需要头文件`#include<fstream>`
+
+文件类型：
+
+- 文本文件：以ASCII码存在于计算机中
+- 二进制文件：以二进制存在于计算机中
+
+三大操作：
+
+- ofstream：写文件
+- ifstream：读文件
+- fstream：读写文件
+
+### 10.1 文本文件
+
+**写文件**：
+
+```c++
+	ofstream f;					//创建流对象
+	f.open("10.txt",ios::out);	//打开文件和打开方式
+	//使用相对路径 
+	f<<"test1\ntest2"<<endl;	//向文件输出数据
+	f.close(); 					//关闭文件
+```
+
+| 打开方式    | 解释                       |
+| ----------- | -------------------------- |
+| ios::in     | 为读文件                   |
+| ios::out    | 为写文件                   |
+| ios::ate    | 打开文件直接到最后位置     |
+| ios::app​    | 追加方式写文件             |
+| ios::trunc  | 文件存在的话，先删除后创建 |
+| ios::binary | 二进制方式                 |
+
+补充：利用运算符`|`，用二进制写文件`ios::binary | ios::out`
+
+**读文件**：
+
+```c++
+	ifstream i;					//创建流对象	
+	i.open("10.txt",ios::in);	//打开文件和打开方式
+	if(!i.is_open())			//判断文件是否打开成功
+	{
+		cout<<"文件打开失败"<<endl;
+		return 0;
+	} 
+	//读文件四种方法
+	//读数据1
+	char rec[1024]={0};
+	while(i>>rec){
+		cout<<rec<<endl;
+	} 
+	//读数据2
+	char rec[1024]={0};
+	while(i.getline(rec,sizeof(rec))) 
+	{
+		cout<<rec<<endl;
+	}
+	//读数据3 
+	string rec;
+	while(getline(i,rec)){
+		cout<<rec<<endl;
+	} 
+	//读数据4
+	char c;
+	while((c=i.get())!=EOF)
+	{
+		cout<<c;
+	} 
+	i.close(); 					//关闭文件
+```
