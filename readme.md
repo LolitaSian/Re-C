@@ -349,7 +349,7 @@ C++中利用new操作符在堆区开辟数据
 
 ```c++
 int b=20, c=10;
-int &a = b;
+int& a = b;
 cout<<"a="<<a<<"\tb="<<b<<"\tc="<<c<<endl;
 //20 20 10
 a = c;	//是赋值，不是更改引用
@@ -920,6 +920,275 @@ int main()
 - ifstream：读文件
 - fstream：读写文件
 
+### 9.4 友元
+
+在程序里，有些私有属性也想让类外的一些特殊函数或者类进行访问，就需要用到友元。友元的目的就是让一个函数或者类访问另一个类中的私有成员。
+
+友元关键字是`friend`
+
+**三种实现**：
+
+- 全局函数：类中加上`friend 全局函数声明;`，类外写一个完整的全局函数即可。
+- 类：`friend 类的声明;`再写一个完整的类即可。
+- 成员函数：`friend 类::函数声明`，因为前后两个类互相引用，所以会出现奇奇怪怪的错误，要好好使用预声明和类外定义函数。
+
+### 9.5 运算符重载
+
+对已有的运算符重新进行定义，赋予另一种意义，以适应不同的据类型。
+
+#### 9.5.1 加号运算符重载
+
+使用默认的`operator+`，也可以重载。
+
+```C++
+#include<iostream> 
+using namespace std;
+class number
+{
+public:
+	int a,b;
+	number(int m=0,int n=0):a(m),b(n){}
+	//成员函数重载 
+	/*number operator+ (number &p)
+	{
+		number s;
+		s.a = p.a + this->a;	//写法1 
+		s.b = p.b + this->b;	//写法2
+		return s;
+	}*/
+};
+//全局函数重载
+number operator+(number &p,number &q)
+{
+	number s;
+	s.a = p.a + q.a;
+	s.b = p.b + q.b;
+	return s;
+}
+int main()
+{
+	number a(5,8),c(1,3);
+	number b = operator+(a,a);	//写法1 
+	cout<<b.a<<" "<<b.b<<endl;
+	b = c + a;					//写法2 
+	cout<<b.a<<" "<<b.b<<endl;
+	return 0;
+}
+```
+
+#### 9.5.2 重载<<
+
+重载运算符配合友元可以输出自定义数据类型。
+
+注意cout是ostream类型。
+
+```c++
+#include<iostream >
+using namespace std;
+class number
+{
+public:
+	int a,b;
+	number(int m=0,int n=0):a(m),b(n){}
+}; 
+//只能用全局函数重载左移运算符
+ostream& operator<<(ostream &cout,number &p)
+{	
+	cout<<"a = "<<p.a<<", b = "<<p.b<<endl;
+	return cout;	//实现链式编程 
+}  
+int main()
+{
+	number a;
+	cout<<a; 
+	number b(1,3);
+	cout<<b;
+	return 0;
+}
+```
+
+#### 9.5.3 ++重载
+
+用到了之前占位符的知识，占位符用于区分，实现函数重载。
+
+tips：下面的代码在dev c++中无法运行，vs可以。
+
+```c++
+#include<iostream>
+using namespace std;
+class myInteger
+{
+	friend ostream & operator<<(ostream &cout,myInteger s);
+private:
+	int n ; 
+public:
+	myInteger():n(0){}
+	//重载前置++运算符
+	myInteger& operator++()	
+	//返回引用为了对同一个数据操作  
+	{
+		n++;
+ 		return *this;
+	} 
+	//重载后置++运算符 
+	myInteger& operator++(int) 
+	{
+		myInteger temp = *this;
+		n++;
+		return temp;
+	} 
+	//int占位符，用于区分前置后置的重载 
+};
+ostream & operator<<(ostream &cout,myInteger s)
+{
+	cout<<s.n;
+	return cout;
+} 
+int main()
+{
+	myInteger n;
+	cout<<n++<<endl;
+	return 0;
+}
+```
+
+#### 9.5.4 赋值运算符重载
+
+C++编译器至少会给一个类添加四个默认函数
+
+- 默认构造函数，无函数体
+- 默认析构函数，无函数体
+- 默认拷贝函数
+- 默认赋值运算符operator=
+
+```c++
+#include<iostream>
+using namespace std;
+class number
+{
+public:
+	int *n;
+	number(int a)
+	{
+		n = new int(a);	
+	}
+	void operator=(number &p)	//一定要加上&，否则执行完后p就被析构了。
+	{
+		//编译器提供的是浅拷贝，要自己重载写一个深拷贝
+		if (n != NULL)
+		{
+			delete n;
+			n = NULL;
+		}
+		n = new int(*p.n);
+	}
+	~number()
+	{
+		if (n != NULL)
+		{
+			delete n;
+			n = NULL;
+		}
+	}
+};
+int main()
+{
+	number a(5);
+	number b(7);
+    cout << *a.n << endl;
+	cout << *b.n << endl;
+	b = a;
+	cout << *a.n << endl;
+	cout << *b.n << endl;
+	return 0;
+}
+```
+
+#### 9.5.5 关系运算符重载
+
+```C++
+#include<iostream>
+using namespace std;
+class number
+{
+public:
+	int n;
+	number(int a):n(a){}
+	int operator==(number &p)
+	{
+		if(this->n==p.n)
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+};
+int operator!=(number &p,number &q)
+{
+	if(q.n==p.n)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+}
+int main()
+{
+	number a(8);
+	number b(8);
+	cout<<(a==b)<<endl;
+	cout<<(a!=b)<<endl;
+	return 0;
+}
+```
+
+#### 9.5.6 函数调用运算符重载
+
+函数调用运算符`()`也可以重载，由于重载后使用方式非常像函数调用，因此被称为”仿函数“，仿函数没有固定写法， 十分灵活。
+
+**补充**：匿名对象，比如`print()("hello world")`
+
+```c++
+#include<iostream>
+#include<string>
+using namespace std;
+class print
+{
+public:
+	void operator()(string test)
+	{
+		cout<<test<<endl;
+	}	
+};
+class Add //写法灵活，写什么函数都可以
+{
+public:
+	int operator()(int a,int b)
+	{
+		return a+b;
+	}
+};
+int main()
+{
+	print s;
+	s("hello world");
+	Add a;
+	cout<<a(2,5)<<endl;
+	cout<<Add()(1,7)<<endl;
+	//Add()是匿名函数对象，声明一个a占空间没啥用，所以声明一个匿名对象操作。 
+	return 0;
+} 
+```
+
+
+
+## 10 文件处理
+
 ### 10.1 文本文件
 
 **写文件**：
@@ -978,3 +1247,4 @@ int main()
 	} 
 	i.close(); 					//关闭文件
 ```
+
