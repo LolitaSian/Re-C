@@ -1,6 +1,6 @@
 就是两年不写C++快忘光了。我工作都找好了，又莫名其妙有上岸了。所以重拾写代码这个大业。从最基础的迅速过一遍，然后再写几个项目。虽然我会，但是说不定会有什么新收获呢。
 
-![](https://gitee.com/LolitaAnn/rec/raw/master/pic.jpg)
+![](https://gitee.com/LolitaAnn/rec/raw/master/img/pic.jpg)
 
 
 
@@ -21,6 +21,10 @@
 
 第一个小demo就用到了最简单的函数，结构体之类的，之后的会继续增加东西。
 
+
+
+3.12 今天出国家线了，大概是快要复试了，没空写什么项目了，复试完了再搞。
+
 ---
 
 # Note
@@ -37,7 +41,7 @@
 
 **sizeof**(类型或变量)
 
-**数据类型****
+**数据类型**
 
 - 整型：表示的是整数数据
   - short:2字节
@@ -1073,6 +1077,7 @@ public:
 		n = new int(a);	
 	}
 	void operator=(number &p)	//一定要加上&，否则执行完后p就被析构了。
+    /*不加&执行完之后会析构形参，但是形参的属性是指针，因此销毁形参的时候会析构掉main中的a，加上&之后表示引用，引用做形参不会开辟新地址，执行完后也不会被析构*/
 	{
 		//编译器提供的是浅拷贝，要自己重载写一个深拷贝
 		if (n != NULL)
@@ -1185,9 +1190,287 @@ int main()
 } 
 ```
 
+### 9.6 继承
 
+继承是面向对象的三大特征之一，有共性的一些类可以运用继承来减少重复的代码量。子类又称派生类，父类又称基类。
 
-## 10 文件处理
+**语法**：
+
+`class 子类:继承方式 父类`
+
+多继承：`class 子类:继承方式 父类,继承方式 父类,...` 
+
+多继承可能会引发同名成员出现，会出现二义性，区分访问起来比较麻烦，实际不建议用多继承。
+
+**继承方式**：
+
+- 公共继承：父类共有→子类共有，父类保护→子类保护，父类私有→子类不可访问
+- 保护继承：父类共有、父类保护→子类保护，父类私有→子类不可访问
+- 私有继承：父类共有、父类保护→子类私有，父类私有→子类不可访问
+
+![](https://gitee.com/LolitaAnn/rec/raw/master/img/9.6.1.png)
+
+**继承后的对象模型**：父类的私有成员会被继承，但是子类无法访问。可以用sizeof测一下，或者用vs自带的developer。
+
+进入到相应文件夹下，然后`cl /d1 reportSingleClassLayoutB '文件名'`
+
+![](https://gitee.com/LolitaAnn/rec/raw/master/img/9.6.2.jpg)
+
+```c++
+#include<iostream>
+using namespace std;
+class A
+{
+public:
+	int a;
+protected:
+	int b;
+private:
+	int c;
+}; 
+class B:public A
+{
+	int d;
+};
+class C:public A
+{
+};
+class D:public A
+{
+	int d;
+};
+int main()
+{
+	return 0;
+} 
+```
+
+**构造和析构的顺序**：
+
+父类先构造后析构，子类后构造先析构。
+
+**继承中同名成员的访问**：
+
+子类和父类可以有同名的成员，访问的时候：
+
+- 访问子类成员：直接访问`子类对象.子类同名成员`
+- 访问父类成员：加作用域 `子类对象.父类名::父类同成员`
+- 访问子类静态成员：`子类对象.子类同名成员`或`子类名::子类同名成员`
+- 访问父类静态成员： `子类对象.父类名::父类同成员`或`子类名::父类名::父类同名成员`
+
+tips:
+
+- 如果子类和父类有同名的成员函数，那么子类会覆盖掉所有父类中的成员函数（即包括重载函数）。想访问就得加作用域！！！
+- 对象后面用`.`，类名后边用`::`
+
+**菱形继承**：
+
+![](https://gitee.com/LolitaAnn/rec/raw/master/img/9.6.3.png)
+
+两个类继承了某一个基类，又有一个类继承了这两个类，而形成一个菱形继承，又称钻石继承。因为同时继承两个类，最低级的子类也会出现二义性，虽然二义性可以通过加作用域访问而解决，但是却会出现继承同类代码（重复继承）的问题，导致资源浪费。可以利用虚继承解决。
+
+**虚继承**：`class B:virtual  public A`，A被称为虚基类。虚继承之后数据就只继承一份了。
+
+下边代码中，底层会发现有个`vbptr`指向一个`vbtable`，就是继承了个指针而已。
+
+- v：virtual
+- b：base
+- ptr：pointer
+
+![](https://gitee.com/LolitaAnn/rec/raw/master/img/9.6.4.png)
+
+上图中animal 24字节，因为string 24字节。sheep 28字节，在animal基础上加了4字节指针，camel同理。llama继承了前两者，两个指针8字节加animal的24字节，共计32字节。
+
+```C++
+#include<iostream>
+using namespace std;
+class animal
+{
+	string name;
+};
+class sheep:virtual public animal {}; 
+class camel:virtual public animal {}; 
+class llama:public sheep,public camel {}; 
+int main()
+{
+	return 0; 
+}
+```
+
+### 9.7 多态
+
+- 静态多态：函数重载和运算符重载都属于静态多态，复用函数名
+- 动态多态：派生类和虚函数实现运行时多态
+
+区别：
+
+- 静态多态的函数地址早绑定：编译阶段确定函数地址
+- 动态多态的函数地址绑定晚：运行阶段确定函数地址
+
+**动态多态的满足关系**：
+
+1. 有继承关系
+2. 子类要重写父类的虚函数（函数返回值类型、函数名、参数列表都要完全相同，virtual关键字可写可不写）
+
+**动态多态的使用**：用父类的指针或引用来指向子类的对象
+
+#### 9.7.1 虚函数
+
+```C++
+#include<iostream>
+using namespace std;
+class animal
+{
+public:
+	//加上virtual就是虚函数了 
+	virtual void speak(){cout<<"动物在叫"<<endl; }
+};
+class cat:public animal 
+{
+public:
+	void speak(){cout<<"喵喵喵"<<endl; }
+}; 
+class dog:public animal 
+{
+public:
+	void speak(){cout<<"汪汪汪"<<endl; }
+}; 
+void doSpeak(animal &a)
+{
+	a.speak();
+}
+int main()
+{
+	cat c;
+	doSpeak(c); 
+	/*形参是animal &a 实参是 cat c 父类的引用指向一个子类的对象
+	在C++之间允许父子类型直接转换 
+	执行这个函数之后输出是“动物在叫”
+	因为地址早绑定，在编译阶段就确定了函数地址 
+	如果显示传入参数的输出，就得用到动态多态*/ 
+	dog d;
+	doSpeak(d); 
+	return 0;
+}
+```
+
+cat类中有个`vfptr`，指向一个虚函数表`vftable`，表中记录虚函数的地址。animal类也有`vfptr`指向`vftable`。当子类重写父类的虚函数，那虚函数表内部会替换为子类的虚函数地址。当父类的指针或引用指向子类对象的时候，会发生多态。
+
+- v：virtual
+- f：function
+- ptr：pointer
+
+![](https://gitee.com/LolitaAnn/rec/raw/master/img/9.7.png)
+
+#### 9.7.2 纯虚函数和抽象类
+
+在多态中，通常父类的虚函数实现是毫无意义的，主要都是调用子类重写的内容，因此可以将虚函数改为纯虚函数。当一个类中有纯虚函数，那这个类就被称为抽象类。
+
+**语法**：`virtual 返回值类型 函数名(参数列表) = 0;`
+
+**抽象类的特点**：
+
+- 无法实例化对象
+- 子类必须重写父类中的纯虚函数，否则也属于抽象类
+
+```c++
+#include<iostream>
+using namespace std;
+class animal 	//抽象类 
+{
+public:
+	virtual void speak() = 0;	//纯虚函数 
+}; 
+class cat:public animal
+{
+public:
+	virtual void speak()
+	{
+		cout<<"喵喵喵"<<endl; 
+	}
+};
+int main()
+{
+	cat a;
+	a.speak();
+	return 0;
+}
+```
+
+#### 9.7.3 虚析构和纯虚析构
+
+多态使用的时候，如果子类中有属性开辟到堆区，那么父类指针在释放时无法调用到子类的析构代码。可以将父类中的析构函数改为虚析构或纯虚析构来解决。
+
+**二者共性**：
+
+- 可以解决父类指针释放子类对象
+- 都需要有具体的实现，纯虚析构类内声明，类外实现
+
+**二者区别**：
+
+- 如果是纯虚析构，该类属于抽象类，无法实例化对象
+
+虚析构：`virtual ~(){};`
+
+纯虚析构：`virtual ~(){}=0;`
+
+```C++
+#include<iostream>
+#include<string>
+using namespace std;
+class animal 	//抽象类 
+{
+public:
+	animal()
+	{
+		cout<<"animal构造"<<endl;
+	}
+	virtual void speak() = 0;	//纯虚函数
+	/*virtual ~animal()	//虚析构 
+	{
+		cout<<"animal析构"<<endl;
+	} */
+	//纯虚析构  
+	virtual ~animal() = 0;  
+}; 
+//animal的纯虚析构
+animal::~animal()
+{
+	cout<<"animal纯虚析构"<<endl;
+} 
+class cat:public animal
+{
+public:
+	string *name; 
+	cat(string n)
+	{
+		name = new string(n);
+		cout<<"cat构造"<<endl;
+	}
+	virtual void speak()
+	{
+		cout<<*name<<"喵喵喵"<<endl; 
+	}
+	~cat()
+	{
+		delete name;
+		name = NULL;
+		cout<<"cat析构"<<endl;
+	}
+};
+int main()
+{
+	animal* c = new cat("tom");
+	c->speak();
+	/*父类指针析构的时候不会调用子类析构函数，
+	会导致子类又在堆区的属性，造成子类泄露
+	改成虚析构之后就会走子类的析构*/ 
+	delete c;
+	return 0;
+}
+```
+
+## 10 文件读写
 
 ### 10.1 文本文件
 
@@ -1246,5 +1529,57 @@ int main()
 		cout<<c;
 	} 
 	i.close(); 					//关闭文件
+```
+
+### 10.2 二进制文件
+
+读写二进制文件记得加`ios::binary`
+
+```C++
+#include<iostream>
+#include<fstream>
+class Person
+{
+public:
+	char name[32];	//比较底层的东西用C的方法写不容易出问题 
+	int age;
+}; 
+using namespace std;
+int  main()
+{
+	//创建流对象
+	ofstream file("10.2.txt",ios::out|ios::binary);
+	
+	//打开文件，C++提供了构造函数可以在创建的时候直接打开  
+	//file.open("10.2.txt",ios::out|ios::binary); 
+	
+	//写文件 
+	Person zs = {"张三",18};
+	file.write((const char*)&zs,sizeof(Person));
+	
+	//关闭文件 
+	file.close();
+	
+	//创建对象 
+	ifstream i;
+	
+	//打开文件
+	i.open("10.2.txt",ios::in|ios::binary); 
+	if(!i.is_open())
+	{
+		cout<<"文件打开失败"<<endl;
+		return 0;
+	} 
+	
+	//读文件
+	Person p;
+	i.read((char*)&p,sizeof(Person)); 
+	cout<<p.name<<" "<<p.age<<endl;
+	
+	//关闭
+	i.close();
+	 
+	return 0;
+} 
 ```
 

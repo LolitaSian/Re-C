@@ -5,14 +5,14 @@ int  main()
 {
 	//写文件 
 	ofstream f;
-	f.open("10.txt",ios::out);
+	f.open("10.1.txt",ios::out);
 	//使用相对路径 
 	f<<"test1\ntest2"<<endl;
 	f.close(); 
 	
 	//读文件
 	ifstream i;
-	i.open("10.txt",ios::in);
+	i.open("10.1.txt",ios::in);
 	if(!i.is_open())
 	{
 		cout<<"文件打开失败"<<endl;
